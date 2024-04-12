@@ -1,8 +1,24 @@
 from typing import Any
 import requests
-from employees_id import employees_ids
+import psycopg2
+from configparser import ConfigParser
 
-def get_hh_data(employees_ids:dict) -> list[list, Any]:
+
+def config(filename="database.ini", section="postgresql"):
+    """парсер параметров для подключения к БД из database.ini"""
+    parser = ConfigParser()
+    parser.read(filename)
+    db = {}
+    if parser.has_section(section):
+        params = parser.items(section)
+        for param in params:
+            db[param[0]] = param[1]
+    else:
+        raise Exception(
+            'Section {0} is not found in the {1} file.'.format(section, filename))
+    return db
+
+def get_hh_data(employees_ids: dict) -> list[list, Any]:
     """подключение по API к hh.ru и получение информации о работодателе и вакансиях"""
 
     data = []
@@ -22,3 +38,41 @@ def get_hh_data(employees_ids:dict) -> list[list, Any]:
         })
 
     return data
+
+def create_database(database_name, params):
+    """Создание базы данных и таблиц"""
+    conn = psycopg2.connect(dbname='postgres', **params)
+    conn.autocommit = True
+    cur = conn.cursor()
+    try:
+        cur.execute(f'DROP DATABASE {database_name}')
+    except:
+        cur.execute(f'CREATE DATABASE {database_name}')
+        print(f'Создание новой базы данных {database_name}')
+    else:
+        cur.execute(f'CREATE DATABASE {database_name}')
+        print(f'База данных {database_name} очищена и создана повторно')
+    conn.commit()
+
+    with psycopg2.connect(dbname=database_name, **params) as conn:
+        conn.autocommit = True
+        with conn.cursor() as cur:
+            cur.execute('''CREATE TABLE companies 
+                            (
+                            company_id INTEGER PRIMARY KEY,
+                            name VARCHAR(50) NOT NULL
+                            )
+                            ''')
+            cur.execute('''CREATE TABLE vacancies 
+                            (
+                            vacancy_id SERIAL PRIMARY KEY,
+                            company_id INT REFERENCES companies(company_id),
+                            name VARCHAR(100) NOT NULL,
+                            salary_from INTEGER,
+                            salary_to INTEGER,
+                            url TEXT
+                            )
+                            ''')
+            print('Таблицы созданы')
+
+
