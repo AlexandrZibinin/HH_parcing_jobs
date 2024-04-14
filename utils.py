@@ -39,21 +39,6 @@ def get_hh_data(employees_ids: dict) -> list[list, Any]:
 
     return data
 
-def create_database(database_name, params):
-    """Создание базы данных и таблиц"""
-    conn = psycopg2.connect(dbname='postgres', **params)
-    conn.autocommit = True
-    cur = conn.cursor()
-    try:
-        cur.execute(f'DROP DATABASE {database_name}')
-    except:
-        cur.execute(f'CREATE DATABASE {database_name}')
-        print(f'Создание новой базы данных {database_name}')
-    else:
-        cur.execute(f'CREATE DATABASE {database_name}')
-        print(f'База данных {database_name} очищена и создана повторно')
-    conn.commit()
-
     with psycopg2.connect(dbname=database_name, **params) as conn:
         conn.autocommit = True
         with conn.cursor() as cur:
