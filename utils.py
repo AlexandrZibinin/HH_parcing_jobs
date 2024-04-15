@@ -2,6 +2,7 @@ from typing import Any
 import requests
 import psycopg2
 from configparser import ConfigParser
+from DBManager import DBManager
 
 
 def config(filename="database.ini", section="postgresql"):
@@ -36,32 +37,39 @@ def get_hh_data(companies_ids: dict) -> list[list, Any]:
             'company': com_data,
             'vacancyies': response_vacancy['items']
         })
-
+    print('Подключение успешно. Данные выгружены.')
     return data
 
 def create_tables(params):
+    """функция для создания таблиц"""
     with psycopg2.connect(dbname='hhru', **params) as conn:
         conn.autocommit = True
         with conn.cursor() as cur:
-            cur.execute('''CREATE TABLE companies 
-                            (
-                            company_id INTEGER PRIMARY KEY,
-                            name VARCHAR(50) NOT NULL
-                            )
-                            ''')
-            cur.execute('''CREATE TABLE vacancies 
-                            (
-                            vacancy_id INT PRIMARY KEY,
-                            company_id INT REFERENCES companies(company_id),
-                            name VARCHAR(100) NOT NULL,
-                            salary_from INTEGER,
-                            salary_to INTEGER,
-                            url TEXT
-                            )
-                            ''')
-            print('Таблицы созданы')
+            try:
+                cur.execute('''DROP TABLE IF EXISTS companies''')
+                cur.execute('''DROP TABLE IF EXISTS vacancies''')
+                cur.execute('''CREATE TABLE companies 
+                                (
+                                company_id INTEGER PRIMARY KEY,
+                                name VARCHAR(50) NOT NULL
+                                )
+                                ''')
+                cur.execute('''CREATE TABLE vacancies 
+                                (
+                                vacancy_id INT PRIMARY KEY,
+                                company_id INT REFERENCES companies(company_id),
+                                name VARCHAR(100) NOT NULL,
+                                salary_from INTEGER,
+                                salary_to INTEGER,
+                                url TEXT
+                                )
+                                ''')
+                print('Таблицы созданы')
+            except Exception as e:
+                print('Ошибка при создании таблиц')
 
 def save_data(params, data):
+    """функция для сохранения данных в таблицу"""
     conn = psycopg2.connect(dbname='hhru' ,**params)
     with conn.cursor() as cur:
         for one in data:
@@ -79,4 +87,5 @@ def save_data(params, data):
 
 
         conn.commit()
+    print('Данные успешно сохранены в БД')
 

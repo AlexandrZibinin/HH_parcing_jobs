@@ -11,6 +11,7 @@ class DBManager:
             return conn
 
     def create_cur(self):
+        """создание курсора"""
         conn = self.connect_db()
         cur = conn.cursor()
         return cur
@@ -52,9 +53,6 @@ class DBManager:
             row = cur.fetchall()
         return row
 
-
-
-
     def get_vacancies_with_higher_salary(self):
         """получает список всех вакансий, у которых зарплата выше средней по всем вакансиям."""
         conn = psycopg2.connect(dbname='hhru', **self.params)
@@ -68,13 +66,10 @@ class DBManager:
 
     def get_vacancies_with_keyword(self):
         """получает список всех вакансий, в названии которых содержатся переданные в метод слова, например python."""
-        user_input = input('Введите слово для поиска')
+        user_input = input('Введите слово для поиска: ')
         conn = psycopg2.connect(dbname='hhru', **self.params)
         with conn.cursor() as cur:
-            cur.execute(
-                '''SELECT * FROM vacancies
-                    WHERE salary_from > (SELECT AVG(salary_from) FROM vacancies) AND 
-                    salary_to > (SELECT AVG(salary_to) FROM vacancies)''')
+            cur.execute('''SELECT * FROM vacancies''')
             row = cur.fetchall()
 
             result = []
@@ -82,8 +77,3 @@ class DBManager:
                 if user_input.lower() in str(vac[2]).lower():
                     result.append(vac)
         return result
-
-    def close_db(self):
-        """отключение от БД"""
-        conn = self.connect_db()
-        conn.close()
