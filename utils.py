@@ -18,28 +18,29 @@ def config(filename="database.ini", section="postgresql"):
             'Section {0} is not found in the {1} file.'.format(section, filename))
     return db
 
-def get_hh_data(employees_ids: dict) -> list[list, Any]:
+def get_hh_data(companies_ids: dict) -> list[list, Any]:
     """подключение по API к hh.ru и получение информации о работодателе и вакансиях"""
 
     data = []
-    for employee in employees_ids:
-        emp_data = []
+    for company in companies_ids:
+        com_data = []
 
-        url = 'https://api.hh.ru/employers/' + employees_ids.get(employee)
+        url = 'https://api.hh.ru/employers/' + companies_ids.get(company)
         response = requests.get(url).json()
-        emp_data.append([response["id"], response["name"]])
+        com_data = [int(response["id"]), response["name"]]
 
         url = response["vacancies_url"]
         response_vacancy = requests.get(url).json()
 
         data.append({
-            'employee': emp_data,
+            'company': com_data,
             'vacancyies': response_vacancy['items']
         })
 
     return data
 
-    with psycopg2.connect(dbname=database_name, **params) as conn:
+def create_tables(params):
+    with psycopg2.connect(dbname='hhru', **params) as conn:
         conn.autocommit = True
         with conn.cursor() as cur:
             cur.execute('''CREATE TABLE companies 
@@ -50,7 +51,7 @@ def get_hh_data(employees_ids: dict) -> list[list, Any]:
                             ''')
             cur.execute('''CREATE TABLE vacancies 
                             (
-                            vacancy_id SERIAL PRIMARY KEY,
+                            vacancy_id INT PRIMARY KEY,
                             company_id INT REFERENCES companies(company_id),
                             name VARCHAR(100) NOT NULL,
                             salary_from INTEGER,
@@ -60,4 +61,22 @@ def get_hh_data(employees_ids: dict) -> list[list, Any]:
                             ''')
             print('Таблицы созданы')
 
+def save_data(params, data):
+    conn = psycopg2.connect(dbname='hhru' ,**params)
+    with conn.cursor() as cur:
+        for one in data:
+            company_data = one['company']
+            vacancy_data = one['vacancyies']
+
+            cur.execute('''INSERT INTO companies (company_id, name) VALUES (%s, %s)''',
+                        (company_data[0], company_data[1]))
+
+            for vacan in vacancy_data:
+                try: cur.execute('''INSERT INTO vacancies (vacancy_id, company_id, name, salary_from, salary_to, url) VALUES (%s, %s, %s, %s, %s, %s)''',
+                            (int(vacan['id']), company_data[0], vacan['name'], vacan['salary']['from'], vacan['salary']['to'], vacan['alternate_url']))
+                except:
+                    continue
+
+
+        conn.commit()
 

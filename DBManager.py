@@ -16,42 +16,14 @@ class DBManager:
         return cur
 
     def create_database(self, database_name='hhru'):
-        """Создание базы данных и таблиц"""
-        conn = self.connect_db()
+        """Создание базы данных"""
         cur = self.create_cur()
         try:
-            cur.execute(f'DROP DATABASE {database_name}')
-        except:
-            cur.execute(f'CREATE DATABASE {database_name}')
-            print(f'Создание новой базы данных {database_name}')
-        else:
+            cur.execute(f'DROP DATABASE IF EXISTS {database_name}')
             cur.execute(f'CREATE DATABASE {database_name}')
             print(f'База данных {database_name} очищена и создана повторно')
-        conn.commit()
-
-    def create_table(self):
-        # with psycopg2.connect(self.database_name, **self.params) as conn:
-        #     conn.autocommit = True
-        #     with conn.cursor() as cur:
-        conn = self.connect_db()
-        cur = self.create_cur()
-        cur.execute('''CREATE TABLE companies 
-                        (
-                        company_id INTEGER PRIMARY KEY,
-                        name VARCHAR(50) NOT NULL
-                        )
-                        ''')
-        cur.execute('''CREATE TABLE vacancies 
-                        (
-                        vacancy_id SERIAL PRIMARY KEY,
-                        company_id INT REFERENCES companies(company_id),
-                        name VARCHAR(100) NOT NULL,
-                        salary_from INTEGER,
-                        salary_to INTEGER,
-                        url TEXT
-                        )
-                        ''')
-        print('Таблицы созданы')
+        except Exception as e:
+            print(f'Ошибка при создании базы данных: {e}')
 
     def get_companies_and_vacancies_count(self):
         """получает список всех компаний и количество вакансий у каждой компании."""
