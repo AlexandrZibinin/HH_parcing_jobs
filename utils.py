@@ -2,7 +2,6 @@ from typing import Any
 import requests
 import psycopg2
 from configparser import ConfigParser
-from DBManager import DBManager
 
 
 def config(filename="database.ini", section="postgresql"):
@@ -18,6 +17,7 @@ def config(filename="database.ini", section="postgresql"):
         raise Exception(
             'Section {0} is not found in the {1} file.'.format(section, filename))
     return db
+
 
 def get_hh_data(companies_ids: dict) -> list[list, Any]:
     """подключение по API к hh.ru и получение информации о работодателе и вакансиях"""
@@ -39,6 +39,7 @@ def get_hh_data(companies_ids: dict) -> list[list, Any]:
         })
     print('Подключение успешно. Данные выгружены.')
     return data
+
 
 def create_tables(params):
     """функция для создания таблиц"""
@@ -65,12 +66,13 @@ def create_tables(params):
                                 )
                                 ''')
                 print('Таблицы созданы')
-            except Exception as e:
+            except Exception:
                 print('Ошибка при создании таблиц')
+
 
 def save_data(params, data):
     """функция для сохранения данных в таблицу"""
-    conn = psycopg2.connect(dbname='hhru' ,**params)
+    conn = psycopg2.connect(dbname='hhru', **params)
     with conn.cursor() as cur:
         for one in data:
             company_data = one['company']
@@ -80,12 +82,14 @@ def save_data(params, data):
                         (company_data[0], company_data[1]))
 
             for vacan in vacancy_data:
-                try: cur.execute('''INSERT INTO vacancies (vacancy_id, company_id, name, salary_from, salary_to, url) VALUES (%s, %s, %s, %s, %s, %s)''',
-                            (int(vacan['id']), company_data[0], vacan['name'], vacan['salary']['from'], vacan['salary']['to'], vacan['alternate_url']))
-                except:
+                try:
+                    cur.execute(
+                        '''INSERT INTO vacancies (vacancy_id, company_id, name, salary_from, salary_to, url) VALUES (
+                        %s, %s, %s, %s, %s, %s)''',
+                        (int(vacan['id']), company_data[0], vacan['name'], vacan['salary']['from'],
+                         vacan['salary']['to'], vacan['alternate_url']))
+                except Exception:
                     continue
-
 
         conn.commit()
     print('Данные успешно сохранены в БД')
-

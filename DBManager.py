@@ -1,5 +1,6 @@
 import psycopg2
 
+
 class DBManager:
     def __init__(self, params):
         self.params = params
@@ -37,7 +38,8 @@ class DBManager:
         return row
 
     def get_all_vacancies(self):
-        """получает список всех вакансий с указанием названия компании, названия вакансии и зарплаты и ссылки на вакансию."""
+        """получает список всех вакансий с указанием названия компании, названия вакансии и зарплаты и ссылки на
+        вакансию."""
         conn = psycopg2.connect(dbname='hhru', **self.params)
         with conn.cursor() as cur:
             cur.execute('''SELECT companies.name, vacancies.name, salary_from, salary_to, url from vacancies
@@ -49,7 +51,8 @@ class DBManager:
         """получает среднюю зарплату по вакансиям."""
         conn = psycopg2.connect(dbname='hhru', **self.params)
         with conn.cursor() as cur:
-            cur.execute('''SELECT AVG(salary_from) AS avg_salary_from, AVG(salary_to) AS avg_salary_to from vacancies''')
+            cur.execute(
+                '''SELECT AVG(salary_from) AS avg_salary_from, AVG(salary_to) AS avg_salary_to from vacancies''')
             row = cur.fetchall()
         return row
 

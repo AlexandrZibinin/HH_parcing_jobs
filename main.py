@@ -4,6 +4,7 @@ from companies_ids import company_ids
 from DBManager import DBManager
 from utils import save_data
 
+
 def main():
     """подключение к БД и создание таблиц"""
     params = config()
