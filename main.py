@@ -8,16 +8,17 @@ from utils import save_data
 def main():
     """подклчюение к БД и создание таблиц"""
     params = config()
-    # db_manage = DBManager(params)
+    db_manage = DBManager(params)
     # db_manage.create_database()
     # create_tables(params)
 
-    """подключение по API  к hh.ru и получение данных"""
-    data = get_hh_data(company_ids)
+    # """подключение по API  к hh.ru и получение данных"""
+    # data = get_hh_data(company_ids)
+    #
+    # """сохранение данных в БД"""
+    # save_data(params, data)
 
-
-    """сохранение данных в БД"""
-    save_data(params, data)
+    print(db_manage.get_vacancies_with_keyword())
 
 
 
