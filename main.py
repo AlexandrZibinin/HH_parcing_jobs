@@ -6,19 +6,19 @@ from utils import save_data
 
 
 def main():
-    """подключение к БД и создание таблиц"""
-    params = config()
+
+    params = config()                   #подключение к БД и создание таблиц
     db_manage = DBManager(params)
     db_manage.create_database()
     create_tables(params)
 
-    """подключение по API  к hh.ru и получение данных"""
+                                        #подключение по API  к hh.ru и получение данных
     data = get_hh_data(company_ids)
 
-    """сохранение данных в БД"""
+                                        #сохранение данных в БД
     save_data(params, data)
 
-    """интерактив с пользователем"""
+                                        #интерактив с пользователем
     while True:
         user_input = input("""Выберете команду:
      [1] - список всех компаний и количество их вакансий.
